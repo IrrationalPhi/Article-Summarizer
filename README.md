@@ -1,2 +1,2 @@
 # Article-Summarizer
- Summarizes news articles
+ Summarizes news articles through NLP and clustering algorithms.
