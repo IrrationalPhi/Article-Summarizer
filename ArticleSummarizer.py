@@ -71,13 +71,17 @@ def extract_text_info(url):
     title = soup.find('h1').text.strip()
     
     # get rid of links + single characters + auxiliary stuff
+    title_words = title_words_to_set(title)
+    
+    return text, title_words
+    
+def title_words_to_set(title):
     title_words = nltk.tokenize.word_tokenize(title, language = 'english')
     title_words = set([word.lower() for word in title_words if len(word) > 1])
     title_words = set([word for word in title_words if word not in STOPWORDS])
     
-    return text, title_words
+    return title_words
     
-
 def get_word_scores(text, title_words):
     """
     Get word scores of each word in a text.
@@ -359,16 +363,8 @@ def summarize():
     
     url = url_box.get("1.0","end-1c")
     text, title_words = extract_text_info(url)
-    word_scores = get_word_scores(text, title_words)
-
-    # now get score per sentence
-    # we will only look at sentences that are long enough (say > 100 characters)
-    sentences = nltk.tokenize.sent_tokenize(text, language = 'english')
-    sentences = [s for s in sentences if len(s) >= LENGTH_THRESHOLD]
-
-    top_sentences = get_top_sentences(word_scores, sentences)
-    summary = " ".join(top_sentences)
-    reduction_factor = round(100*(1-len(summary)/len(text)),2)
+    
+    summary, reduction_factor = summarize(text, title_words)
 
     ## for line breaks
     summary = line_breaker(summary, 100)
@@ -379,6 +375,20 @@ def summarize():
     
     summary_box.delete('1.0', tk.END)
     summary_box.insert(tk.END, output)
+    
+    return summary, reduction_factor
+
+def summarize(text, title_words):
+    word_scores = get_word_scores(text, title_words)
+
+    # now get score per sentence
+    # we will only look at sentences that are long enough (say > 100 characters)
+    sentences = nltk.tokenize.sent_tokenize(text, language = 'english')
+    sentences = [s for s in sentences if len(s) >= LENGTH_THRESHOLD]
+
+    top_sentences = get_top_sentences(word_scores, sentences)
+    summary = " ".join(top_sentences)
+    reduction_factor = round(100*(1-len(summary)/len(text)),2)
     
     return summary, reduction_factor
 
